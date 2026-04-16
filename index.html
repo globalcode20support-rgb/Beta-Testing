@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beta Testers — Trading Journal · GlobalCode 2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060b14;
+    --surface: #0d1626;
+    --border: #1a2840;
+    --border-glow: #2a4a7f;
+    --gold: #c8a84b;
+    --gold-light: #e8c96b;
+    --green: #00d4a0;
+    --green-dim: #00a07a;
+    --text: #e8eef8;
+    --text-dim: #6a7f9a;
+    --text-mid: #9ab0c8;
+    --red: #ff4d6a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.18;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--green); top: -150px; right: -150px; animation: drift1 12s ease-in-out infinite; }
+  .orb-2 { width: 400px; height: 400px; background: var(--gold); bottom: -100px; left: -100px; animation: drift2 15s ease-in-out infinite; }
+
+  @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-40px,40px)} }
+  @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-30px)} }
+
+  /* Language bar */
+  .lang-bar {
+    position: relative;
+    z-index: 20;
+    background: rgba(6,11,20,0.95);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 24px;
+    height: 40px;
+    gap: 4px;
+  }
+  .lang-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    margin-right: 8px;
+    text-transform: uppercase;
+  }
+  .lang-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .lang-btn:hover { border-color: var(--green); color: var(--green); }
+  .lang-btn.active {
+    background: rgba(0,212,160,0.1);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* Ticker bar */
+  .ticker {
+    position: relative;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    height: 36px;
+    display: flex;
+    align-items: center;
+  }
+  .ticker-track {
+    display: flex;
+    gap: 60px;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .ticker-item { display: flex; gap: 8px; }
+  .ticker-item .sym { color: var(--gold); font-weight: 500; }
+  .ticker-item .up { color: var(--green); }
+  .ticker-item .down { color: var(--red); }
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 0 0;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--green), var(--gold));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text { font-size: 14px; font-weight: 700; letter-spacing: 0.05em; }
+  .logo-sub { font-size: 10px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
+  .badge-beta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: rgba(200,168,75,0.15);
+    color: var(--gold);
+    border: 1px solid rgba(200,168,75,0.3);
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .hero {
+    padding: 64px 0 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .overline {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .overline::before {
+    content: '';
+    width: 24px; height: 1px;
+    background: var(--green);
+  }
+
+  h1 {
+    font-size: clamp(36px, 4.5vw, 54px);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  h1 span {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-mid);
+    margin-bottom: 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+  }
+
+  .stats {
+    display: flex;
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+  .stat {
+    border-left: 2px solid var(--border-glow);
+    padding-left: 14px;
+  }
+  .stat-num {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .benefits { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .benefits li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--text-mid);
+  }
+  .benefits li::before {
+    content: '';
+    width: 18px; height: 18px; min-width: 18px;
+    background: rgba(0,212,160,0.1);
+    border: 1px solid var(--green);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%2300d4a0' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0,212,160,0.05), 0 40px 80px rgba(0,0,0,0.4);
+    animation: cardIn 0.6s ease-out;
+  }
+  @keyframes cardIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  .form-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), var(--gold), transparent);
+  }
+
+  .form-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .form-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 32px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .full { grid-column: 1 / -1; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .field label .req { color: var(--gold); }
+
+  .field input,
+  .field select,
+  .field textarea {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    width: 100%;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--green);
+    background: rgba(0,212,160,0.05);
+    box-shadow: 0 0 0 3px rgba(0,212,160,0.1);
+  }
+  .field select { appearance: none; cursor: pointer; }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .field input::placeholder,
+  .field textarea::placeholder { color: var(--text-dim); }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '↓';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 12px;
+    pointer-events: none;
+  }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--green-dim), var(--green));
+    border: none;
+    border-radius: 12px;
+    color: #060b14;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,212,160,0.35); }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  .submit-btn .arrow { transition: transform 0.2s; }
+  .submit-btn:hover .arrow { transform: translateX(4px); }
+
+  .success-msg {
+    display: none;
+    text-align: center;
+    padding: 24px;
+    animation: fadeIn 0.4s ease;
+  }
+  .success-msg.visible { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .success-icon {
+    width: 56px; height: 56px;
+    background: rgba(0,212,160,0.1);
+    border: 2px solid var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  .success-msg h3 { font-size: 22px; font-weight: 700; }
+  .success-msg p { color: var(--text-mid); font-size: 14px; font-family: 'JetBrains Mono', monospace; }
+  @keyframes fadeIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+
+  .field-error {
+    font-size: 11px;
+    color: var(--red);
+    font-family: 'JetBrains Mono', monospace;
+    display: none;
+    margin-top: 2px;
+  }
+  .field.has-error input,
+  .field.has-error select {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(255,77,106,0.1);
+  }
+  .field.has-error .field-error { display: block; }
+
+  .privacy {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 0;
+    margin-top: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  footer a { color: var(--green); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 800px) {
+    .hero { grid-template-columns: 1fr; gap: 40px; padding: 40px 0 32px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .full { grid-column: 1; }
+    .stats { flex-wrap: wrap; gap: 20px; }
+    .form-card { padding: 28px 20px; }
+    h1 { font-size: 36px; }
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+    .lang-bar { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- Language selector bar -->
+<div class="lang-bar">
+  <span class="lang-label" id="langLabel">Idioma:</span>
+  <button class="lang-btn active" onclick="setLang('es')" id="btn-es">ES</button>
+  <button class="lang-btn" onclick="setLang('fr')" id="btn-fr">FR</button>
+  <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+</div>
+
+<!-- Ticker -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item"><span class="sym">BTC/USD</span><span class="up">+2.34%</span></span>
+    <span class="ticker-item"><span class="sym">ETH/USD</span><span class="down">-0.87%</span></span>
+    <span class="ticker-item"><span class="sym">AAPL</span><span class="up">+1.12%</span></span>
+    <span class="ticker-item"><span class="sym">TSLA</span><span class="up">+3.56%</span></span>
+    <span class="ticker-item"><span class="sym">EUR/USD</span><span class="down">-0.22%</span></span>
+    <span class="ticker-item"><span class="sym">GOLD</span><span class="up">+0.65%</span></span>
+    <span class="ticker-item"><span class="sym">S&P500</span><span class="up">+0.41%</span></span>
+    <span class="ticker-item"><span class="sym">NQ100</span><span class="up">+0.78%</span></span>
+    <span class="ticker-item"><span class="sym">BTC/USD</span><span class="up">+2.34%</span></span>
+    <span class="ticker-item"><span class="sym">ETH/USD</span><span class="down">-0.87%</span></span>
+    <span class="ticker-item"><span class="sym">AAPL</span><span class="up">+1.12%</span></span>
+    <span class="ticker-item"><span class="sym">TSLA</span><span class="up">+3.56%</span></span>
+    <span class="ticker-item"><span class="sym">EUR/USD</span><span class="down">-0.22%</span></span>
+    <span class="ticker-item"><span class="sym">GOLD</span><span class="up">+0.65%</span></span>
+    <span class="ticker-item"><span class="sym">S&P500</span><span class="up">+0.41%</span></span>
+    <span class="ticker-item"><span class="sym">NQ100</span><span class="up">+0.78%</span></span>
+  </div>
+</div>
+
+<div class="page">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">📈</div>
+      <div>
+        <div class="logo-text">Trading Journal</div>
+        <div class="logo-sub">by GlobalCode 2.0</div>
+      </div>
+    </div>
+    <div class="badge-beta">▶ Beta Testing</div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-left">
+      <div class="overline" id="txt-overline">Acceso exclusivo</div>
+      <h1 id="txt-h1">Sé el primero en probar<br><span>Trading Journal</span></h1>
+      <p class="hero-desc" id="txt-desc">
+        Únete al programa Beta y ayúdanos a construir<br>
+        el mejor diario de trading del mercado.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num">24–48h</div>
+          <div class="stat-label" id="txt-stat1">Acceso a la app</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">100%</div>
+          <div class="stat-label" id="txt-stat2">Gratuito</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">Early</div>
+          <div class="stat-label" id="txt-stat3">Acceso prioritario</div>
+        </div>
+      </div>
+
+      <ul class="benefits">
+        <li id="txt-b1">Acceso anticipado a funciones exclusivas</li>
+        <li id="txt-b2">Influye directamente en el desarrollo del producto</li>
+        <li id="txt-b3">Canal directo con el equipo de GlobalCode 2.0</li>
+        <li id="txt-b4">Reconocimiento como Beta Tester fundador</li>
+        <li id="txt-b5">Recibirás la app en tu cuenta Google Play</li>
+      </ul>
+    </div>
+
+    <div class="hero-right">
+      <div class="form-card">
+        <div class="form-title" id="txt-formTitle">Registro Beta</div>
+        <div class="form-subtitle" id="txt-formSubtitle">// Completa el formulario · 2 minutos</div>
+
+        <form id="betaForm">
+          <div class="form-grid">
+            <div class="field">
+              <label id="txt-labelName">Nombre <span class="req">*</span></label>
+              <input type="text" name="nombre" id="inp-name" placeholder="Tu nombre" required>
+              <span class="field-error" id="txt-errName">Este campo es obligatorio</span>
+            </div>
+            <div class="field">
+              <label id="txt-labelAlias">Alias</label>
+              <input type="text" name="alias" id="inp-alias" placeholder="Para análisis anónimo">
+            </div>
+
+            <div class="field full">
+              <label id="txt-labelEmail">Email <span class="req">*</span></label>
+              <input type="email" name="email" placeholder="tu@email.com" required>
+              <span class="field-error" id="txt-errEmail">Introduce un email válido</span>
+            </div>
+
+            <div class="field full">
+              <label id="txt-labelGplay">Cuenta Google Play Store <span class="req">*</span></label>
+              <input type="email" name="google_play" placeholder="cuenta@gmail.com" required>
+              <span class="field-error" id="txt-errGplay">Necesitamos tu cuenta Google Play para enviarte la app</span>
+            </div>
+
+            <div class="field full">
+              <label id="txt-labelLevel">Nivel de experiencia <span class="req">*</span></label>
+              <div class="select-wrap">
+                <select name="nivel" required id="sel-level">
+                  <option value="" disabled selected id="opt-default">Selecciona tu nivel</option>
+                  <option value="principiante" id="opt-1">🌱 Principiante (menos de 1 año)</option>
+                  <option value="intermedio" id="opt-2">📊 Intermedio (1–3 años)</option>
+                  <option value="avanzado" id="opt-3">⚡ Avanzado (3–5 años)</option>
+                  <option value="experto" id="opt-4">🏆 Experto (+5 años)</option>
+                </select>
+              </div>
+              <span class="field-error" id="txt-errLevel">Selecciona una opción</span>
+            </div>
+
+            <div class="field full">
+              <label id="txt-labelExpect">¿Qué esperas del beta testing?</label>
+              <textarea name="expectativas" id="txt-expectTA" placeholder="Cuéntanos qué tipo de feedback te gustaría dar, qué funciones te interesan más..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">
+            <span id="txt-submitBtn">Enviar solicitud</span>
+            <span class="arrow">→</span>
+          </button>
+          <p class="privacy" id="txt-privacy">🔒 Tus datos sólo se usan para el programa beta · globalcode20.support@gmail.com</p>
+        </form>
+
+        <div class="success-msg" id="successMsg">
+          <div class="success-icon">✓</div>
+          <h3 id="txt-successTitle">¡Solicitud enviada!</h3>
+          <p id="txt-successBody">Recibirás acceso en las próximas 24–48h<br>en tu cuenta de Google Play Store.</p>
+          <p id="txt-successThanks" style="color:var(--gold);margin-top:8px">¡Gracias por ser parte de GlobalCode 2.0! 🚀</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span id="txt-footer">© 2025 GlobalCode 2.0 · Trading Journal</span>
+    <span><a href="https://globalcode20support-rgb.github.io/Trading-journal-landing/" target="_blank">globalcode20support-rgb.github.io ↗</a></span>
+    <span>globalcode20.support@gmail.com</span>
+  </footer>
+</div>
+
+<script>
+  /* ─── TRANSLATIONS ─── */
+  const i18n = {
+    es: {
+      langLabel:    'Idioma:',
+      overline:     'Acceso exclusivo',
+      h1:           'Sé el primero en probar<br><span>Trading Journal</span>',
+      desc:         'Únete al programa Beta y ayúdanos a construir<br>el mejor diario de trading del mercado.',
+      stat1:        'Acceso a la app',
+      stat2:        'Gratuito',
+      stat3:        'Acceso prioritario',
+      b1:           'Acceso anticipado a funciones exclusivas',
+      b2:           'Influye directamente en el desarrollo del producto',
+      b3:           'Canal directo con el equipo de GlobalCode 2.0',
+      b4:           'Reconocimiento como Beta Tester fundador',
+      b5:           'Recibirás la app en tu cuenta Google Play',
+      formTitle:    'Registro Beta',
+      formSubtitle: '// Completa el formulario · 2 minutos',
+      labelName:    'Nombre <span class="req">*</span>',
+      labelAlias:   'Alias',
+      labelEmail:   'Email <span class="req">*</span>',
+      labelGplay:   'Cuenta Google Play Store <span class="req">*</span>',
+      labelLevel:   'Nivel de experiencia <span class="req">*</span>',
+      labelExpect:  '¿Qué esperas del beta testing?',
+      phName:       'Tu nombre',
+      phAlias:      'Para análisis anónimo',
+      phEmail:      'tu@email.com',
+      phGplay:      'cuenta@gmail.com',
+      phExpect:     'Cuéntanos qué tipo de feedback te gustaría dar, qué funciones te interesan más...',
+      optDefault:   'Selecciona tu nivel',
+      opt1:         '🌱 Principiante (menos de 1 año)',
+      opt2:         '📊 Intermedio (1–3 años)',
+      opt3:         '⚡ Avanzado (3–5 años)',
+      opt4:         '🏆 Experto (+5 años)',
+      errName:      'Este campo es obligatorio',
+      errEmail:     'Introduce un email válido',
+      errGplay:     'Necesitamos tu cuenta Google Play para enviarte la app',
+      errLevel:     'Selecciona una opción',
+      submitBtn:    'Enviar solicitud',
+      sending:      'Enviando...',
+      privacy:      '🔒 Tus datos sólo se usan para el programa beta · globalcode20.support@gmail.com',
+      successTitle: '¡Solicitud enviada!',
+      successBody:  'Recibirás acceso en las próximas 24–48h<br>en tu cuenta de Google Play Store.',
+      successThanks:'¡Gracias por ser parte de GlobalCode 2.0! 🚀',
+      footer:       '© 2025 GlobalCode 2.0 · Trading Journal',
+      alertError:   'Hubo un error al enviar. Intenta de nuevo o escríbenos a globalcode20.support@gmail.com',
+      alertConn:    'Error de conexión. Escríbenos a globalcode20.support@gmail.com',
+    },
+    fr: {
+      langLabel:    'Langue :',
+      overline:     'Accès exclusif',
+      h1:           'Soyez le premier à tester<br><span>Trading Journal</span>',
+      desc:         'Rejoignez le programme Bêta et aidez-nous à construire<br>le meilleur journal de trading du marché.',
+      stat1:        'Accès à l\'app',
+      stat2:        'Gratuit',
+      stat3:        'Accès prioritaire',
+      b1:           'Accès anticipé aux fonctionnalités exclusives',
+      b2:           'Influencez directement le développement du produit',
+      b3:           'Canal direct avec l\'équipe de GlobalCode 2.0',
+      b4:           'Reconnaissance en tant que Bêta Testeur fondateur',
+      b5:           'Vous recevrez l\'app sur votre compte Google Play',
+      formTitle:    'Inscription Bêta',
+      formSubtitle: '// Complétez le formulaire · 2 minutes',
+      labelName:    'Prénom <span class="req">*</span>',
+      labelAlias:   'Alias',
+      labelEmail:   'E-mail <span class="req">*</span>',
+      labelGplay:   'Compte Google Play Store <span class="req">*</span>',
+      labelLevel:   'Niveau d\'expérience <span class="req">*</span>',
+      labelExpect:  'Qu\'attendez-vous du bêta test ?',
+      phName:       'Votre prénom',
+      phAlias:      'Pour une analyse anonyme',
+      phEmail:      'vous@email.com',
+      phGplay:      'compte@gmail.com',
+      phExpect:     'Dites-nous quel type de retour vous souhaitez donner, quelles fonctionnalités vous intéressent le plus...',
+      optDefault:   'Sélectionnez votre niveau',
+      opt1:         '🌱 Débutant (moins d\'1 an)',
+      opt2:         '📊 Intermédiaire (1–3 ans)',
+      opt3:         '⚡ Avancé (3–5 ans)',
+      opt4:         '🏆 Expert (+5 ans)',
+      errName:      'Ce champ est obligatoire',
+      errEmail:     'Veuillez saisir un e-mail valide',
+      errGplay:     'Nous avons besoin de votre compte Google Play pour vous envoyer l\'app',
+      errLevel:     'Veuillez sélectionner une option',
+      submitBtn:    'Envoyer la demande',
+      sending:      'Envoi en cours...',
+      privacy:      '🔒 Vos données ne sont utilisées que pour le programme bêta · globalcode20.support@gmail.com',
+      successTitle: 'Demande envoyée !',
+      successBody:  'Vous recevrez l\'accès dans les 24–48h suivantes<br>sur votre compte Google Play Store.',
+      successThanks:'Merci de faire partie de GlobalCode 2.0 ! 🚀',
+      footer:       '© 2025 GlobalCode 2.0 · Trading Journal',
+      alertError:   'Une erreur s\'est produite lors de l\'envoi. Réessayez ou écrivez-nous à globalcode20.support@gmail.com',
+      alertConn:    'Erreur de connexion. Écrivez-nous à globalcode20.support@gmail.com',
+    },
+    en: {
+      langLabel:    'Language:',
+      overline:     'Exclusive access',
+      h1:           'Be the first to try<br><span>Trading Journal</span>',
+      desc:         'Join the Beta program and help us build<br>the best trading journal on the market.',
+      stat1:        'App access',
+      stat2:        'Free',
+      stat3:        'Priority access',
+      b1:           'Early access to exclusive features',
+      b2:           'Directly influence product development',
+      b3:           'Direct channel with the GlobalCode 2.0 team',
+      b4:           'Recognition as a founding Beta Tester',
+      b5:           'You\'ll receive the app on your Google Play account',
+      formTitle:    'Beta Registration',
+      formSubtitle: '// Fill out the form · 2 minutes',
+      labelName:    'Name <span class="req">*</span>',
+      labelAlias:   'Alias',
+      labelEmail:   'Email <span class="req">*</span>',
+      labelGplay:   'Google Play Store Account <span class="req">*</span>',
+      labelLevel:   'Experience level <span class="req">*</span>',
+      labelExpect:  'What do you expect from beta testing?',
+      phName:       'Your name',
+      phAlias:      'For anonymous analysis',
+      phEmail:      'you@email.com',
+      phGplay:      'account@gmail.com',
+      phExpect:     'Tell us what kind of feedback you\'d like to give, which features interest you most...',
+      optDefault:   'Select your level',
+      opt1:         '🌱 Beginner (less than 1 year)',
+      opt2:         '📊 Intermediate (1–3 years)',
+      opt3:         '⚡ Advanced (3–5 years)',
+      opt4:         '🏆 Expert (+5 years)',
+      errName:      'This field is required',
+      errEmail:     'Please enter a valid email',
+      errGplay:     'We need your Google Play account to send you the app',
+      errLevel:     'Please select an option',
+      submitBtn:    'Submit application',
+      sending:      'Sending...',
+      privacy:      '🔒 Your data is only used for the beta program · globalcode20.support@gmail.com',
+      successTitle: 'Application sent!',
+      successBody:  'You\'ll receive access within the next 24–48h<br>on your Google Play Store account.',
+      successThanks:'Thank you for being part of GlobalCode 2.0! 🚀',
+      footer:       '© 2025 GlobalCode 2.0 · Trading Journal',
+      alertError:   'There was an error sending. Please try again or contact us at globalcode20.support@gmail.com',
+      alertConn:    'Connection error. Contact us at globalcode20.support@gmail.com',
+    }
+  };
+
+  let currentLang = 'es';
+
+  function setLang(lang) {
+    currentLang = lang;
+    const t = i18n[lang];
+
+    // Buttons
+    document.getElementById('langLabel').textContent = t.langLabel;
+    ['es','fr','en'].forEach(l => {
+      document.getElementById('btn-' + l).classList.toggle('active', l === lang);
+    });
+
+    // html lang attr
+    document.documentElement.lang = lang;
+
+    // Hero
+    document.getElementById('txt-overline').textContent = t.overline;
+    document.getElementById('txt-h1').innerHTML = t.h1;
+    document.getElementById('txt-desc').innerHTML = t.desc;
+    document.getElementById('txt-stat1').textContent = t.stat1;
+    document.getElementById('txt-stat2').textContent = t.stat2;
+    document.getElementById('txt-stat3').textContent = t.stat3;
+    document.getElementById('txt-b1').textContent = t.b1;
+    document.getElementById('txt-b2').textContent = t.b2;
+    document.getElementById('txt-b3').textContent = t.b3;
+    document.getElementById('txt-b4').textContent = t.b4;
+    document.getElementById('txt-b5').textContent = t.b5;
+
+    // Form card
+    document.getElementById('txt-formTitle').textContent = t.formTitle;
+    document.getElementById('txt-formSubtitle').textContent = t.formSubtitle;
+    document.getElementById('txt-labelName').innerHTML = t.labelName;
+    document.getElementById('txt-labelAlias').textContent = t.labelAlias;
+    document.getElementById('txt-labelEmail').innerHTML = t.labelEmail;
+    document.getElementById('txt-labelGplay').innerHTML = t.labelGplay;
+    document.getElementById('txt-labelLevel').innerHTML = t.labelLevel;
+    document.getElementById('txt-labelExpect').textContent = t.labelExpect;
+
+    // Placeholders
+    document.getElementById('inp-name').placeholder = t.phName;
+    document.getElementById('inp-alias').placeholder = t.phAlias;
+    document.getElementById('txt-expectTA').placeholder = t.phExpect;
+
+    // Select options
+    document.getElementById('opt-default').textContent = t.optDefault;
+    document.getElementById('opt-1').textContent = t.opt1;
+    document.getElementById('opt-2').textContent = t.opt2;
+    document.getElementById('opt-3').textContent = t.opt3;
+    document.getElementById('opt-4').textContent = t.opt4;
+
+    // Errors
+    document.getElementById('txt-errName').textContent = t.errName;
+    document.getElementById('txt-errEmail').textContent = t.errEmail;
+    document.getElementById('txt-errGplay').textContent = t.errGplay;
+    document.getElementById('txt-errLevel').textContent = t.errLevel;
+
+    // Submit & privacy
+    document.getElementById('txt-submitBtn').textContent = t.submitBtn;
+    document.getElementById('txt-privacy').textContent = t.privacy;
+
+    // Success message
+    document.getElementById('txt-successTitle').textContent = t.successTitle;
+    document.getElementById('txt-successBody').innerHTML = t.successBody;
+    document.getElementById('txt-successThanks').textContent = t.successThanks;
+
+    // Footer
+    document.getElementById('txt-footer').textContent = t.footer;
+  }
+
+  /* ─── FORMSPREE ─── */
+  const FORMSPREE_URL = 'https://formspree.io/f/meevebyb';
+
+  const form = document.getElementById('betaForm');
+  const successMsg = document.getElementById('successMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const t = i18n[currentLang];
+
+    let valid = true;
+    const fields = form.querySelectorAll('[required]');
+    fields.forEach(f => {
+      const parent = f.closest('.field');
+      parent.classList.remove('has-error');
+      if (!f.value.trim() || (f.type === 'email' && !f.value.includes('@'))) {
+        parent.classList.add('has-error');
+        valid = false;
+      }
+    });
+    if (!valid) return;
+
+    submitBtn.disabled = true;
+    document.getElementById('txt-submitBtn').textContent = t.sending;
+
+    try {
+      const data = new FormData(form);
+      const res = await fetch(FORMSPREE_URL, {
+        method: 'POST',
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (res.ok) {
+        form.style.display = 'none';
+        successMsg.classList.add('visible');
+      } else {
+        alert(t.alertError);
+        submitBtn.disabled = false;
+        document.getElementById('txt-submitBtn').textContent = t.submitBtn;
+      }
+    } catch(err) {
+      alert(t.alertConn);
+      submitBtn.disabled = false;
+      document.getElementById('txt-submitBtn').textContent = t.submitBtn;
+    }
+  });
+
+  form.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('input', () => el.closest('.field')?.classList.remove('has-error'));
+  });
+</script>
+</body>
+</html>
